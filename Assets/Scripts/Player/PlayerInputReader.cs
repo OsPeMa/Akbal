@@ -5,6 +5,8 @@ public class PlayerInputReader : MonoBehaviour
 {
     public Vector2 Move { get; private set; }
     public bool DashPressed { get; private set; }
+    public bool ParryPressed { get; private set; }
+    public bool PurifyPressed { get; private set; }
     public bool PurifyHeld { get; private set; }
 
     void Update()
@@ -32,8 +34,15 @@ public class PlayerInputReader : MonoBehaviour
         DashPressed = (kb != null && kb.spaceKey.wasPressedThisFrame)
                    || (gp != null && gp.buttonSouth.wasPressedThisFrame);
 
+        ParryPressed = (kb != null && kb.qKey.wasPressedThisFrame)
+                    || (gp != null && gp.buttonNorth.wasPressedThisFrame);
+
         PurifyHeld = (ms != null && ms.rightButton.isPressed)
                   || (kb != null && kb.eKey.isPressed)
                   || (gp != null && gp.rightTrigger.ReadValue() > 0.5f);
+
+        PurifyPressed = (ms != null && ms.rightButton.wasPressedThisFrame)
+                     || (kb != null && kb.eKey.wasPressedThisFrame)
+                     || (gp != null && gp.rightTrigger.wasPressedThisFrame);
     }
 }

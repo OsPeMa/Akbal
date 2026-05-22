@@ -37,12 +37,15 @@ public class Enemy : MonoBehaviour
 
     public State CurrentState { get; private set; } = State.Chasing;
     public bool IsVulnerable => CurrentState == State.Vulnerable;
+    public bool RitualLocked { get; set; }
 
     Health health;
     Rigidbody rb;
     MeshRenderer mr;
     int attacksThisCycle;
     bool playerHitThisStrike;
+    bool playerParriedThisStrike;
+    bool parryWasOnBeat;
     float pendingVulnerableDuration;
 
     void Awake()
@@ -127,6 +130,8 @@ public class Enemy : MonoBehaviour
     IEnumerator StrikeStep()
     {
         playerHitThisStrike = false;
+        playerParriedThisStrike = false;
+        parryWasOnBeat = false;
         Vector3 dir = transform.forward;
         Vector3 startPos = transform.position;
         Vector3 endPos = startPos + dir * strikeReach;
@@ -141,8 +146,17 @@ public class Enemy : MonoBehaviour
             for (int i = 0; i < hits.Length; i++)
             {
                 if (!hits[i].CompareTag(targetTag)) continue;
+                if (playerHitThisStrike) continue;
+                var parry = hits[i].GetComponentInParent<PlayerParry>();
+                if (parry != null && parry.IsActive)
+                {
+                    playerParriedThisStrike = true;
+                    parryWasOnBeat = parry.LastParryWasOnBeat;
+                    playerHitThisStrike = true;
+                    continue;
+                }
                 var hp = hits[i].GetComponentInParent<Health>();
-                if (hp != null && !playerHitThisStrike)
+                if (hp != null)
                 {
                     hp.TakeDamage(strikeDamage);
                     playerHitThisStrike = true;
@@ -159,12 +173,17 @@ public class Enemy : MonoBehaviour
         rb.linearVelocity = Vector3.zero;
         attacksThisCycle++;
         bool tired = attacksThisCycle >= attacksUntilTired;
+        bool parried = playerParriedThisStrike;
         bool missed = !playerHitThisStrike;
         yield return new WaitForSeconds(recoverTime);
         if (tired)
         {
             attacksThisCycle = 0;
             EnterVulnerable(tiredDuration);
+        }
+        else if (parried)
+        {
+            EnterVulnerable(parryWasOnBeat ? tiredDuration : dodgeVulnerableDuration);
         }
         else if (missed)
         {
@@ -190,7 +209,7 @@ public class Enemy : MonoBehaviour
         float t = 0f;
         while (t < duration && CurrentState == State.Vulnerable && health.IsAlive)
         {
-            t += Time.deltaTime;
+            if (!RitualLocked) t += Time.deltaTime;
             yield return null;
         }
         if (CurrentState == State.Vulnerable)

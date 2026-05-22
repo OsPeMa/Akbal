@@ -15,6 +15,7 @@ public class RhythmSession
     public double LoopOriginBeat { get; private set; }
     public float Time { get; private set; }
     public bool Started { get; private set; }
+    public bool Finished { get; private set; }
     public float LookAhead { get; set; } = 2f;
     public float PerfectWindow { get; set; } = 0.15f;
     public float GoodWindow { get; set; } = 0.35f;
@@ -37,6 +38,7 @@ public class RhythmSession
 
     public void Tick()
     {
+        if (Finished) return;
         if (Pattern == null || Conductor == null || !Conductor.IsPlaying) return;
 
         if (!Started)
@@ -56,14 +58,6 @@ public class RhythmSession
             patternIndex++;
         }
 
-        if (Pattern.loop && Time >= Pattern.totalBeats && patternIndex >= Pattern.beats.Count)
-        {
-            loopCount++;
-            LoopOriginBeat += Pattern.totalBeats;
-            patternIndex = 0;
-            live.Clear();
-        }
-
         for (int i = live.Count - 1; i >= 0; i--)
         {
             var b = live[i];
@@ -73,6 +67,12 @@ public class RhythmSession
                 MissCount++;
                 live.RemoveAt(i);
             }
+        }
+
+        if (Time >= Pattern.totalBeats && patternIndex >= Pattern.beats.Count && live.Count == 0)
+        {
+            loopCount++;
+            Finished = true;
         }
     }
 

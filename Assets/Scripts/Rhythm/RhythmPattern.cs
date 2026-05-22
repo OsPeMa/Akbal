@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Serialization;
 
-[CreateAssetMenu(menuName = "Tokum/Rhythm Pattern", fileName = "RhythmPattern")]
+[CreateAssetMenu(menuName = "Akbal/Rhythm Pattern", fileName = "RhythmPattern")]
 public class RhythmPattern : ScriptableObject
 {
     [Tooltip("Length of one pass through the pattern, in beats.")]

@@ -63,6 +63,7 @@ public class PrototypeBootstrap : MonoBehaviour
         if (playerGo.GetComponent<PlayerInputReader>() == null) playerGo.AddComponent<PlayerInputReader>();
         if (playerGo.GetComponent<PlayerMover>() == null) playerGo.AddComponent<PlayerMover>();
         if (playerGo.GetComponent<PlayerDash>() == null) playerGo.AddComponent<PlayerDash>();
+        if (playerGo.GetComponent<PlayerParry>() == null) playerGo.AddComponent<PlayerParry>();
         if (playerGo.GetComponent<PlayerController>() == null) playerGo.AddComponent<PlayerController>();
         return playerGo;
     }
@@ -202,9 +203,11 @@ public class PrototypeBootstrap : MonoBehaviour
         var mr = go.GetComponent<MeshRenderer>();
         mr.sharedMaterial = new Material(mr.sharedMaterial) { color = new Color(0.7f, 0.25f, 0.25f) };
         go.AddComponent<Rigidbody>();
-        go.AddComponent<Health>();
+        var health = go.AddComponent<Health>();
         var e = go.AddComponent<Enemy>();
         e.target = target;
+        var bar = go.AddComponent<EnemyCorruptionBar>();
+        bar.source = health;
         return go;
     }
 }

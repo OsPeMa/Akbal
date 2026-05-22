@@ -1,4 +1,4 @@
-# Tokum — Game Design Document
+# Akbal — Game Design Document
 
 *Working design document. Last updated 2026-05-22.*
 
@@ -6,7 +6,7 @@
 
 ## 1. Vision
 
-Tokum is an isometric rhythm-action game where the player does not defeat enemies by killing them — they heal and purify them. Enemies are corrupted or enraged; the player reduces their corruption through gameplay. Combat resolution is healing, not damage.
+Akbal is an isometric rhythm-action game where the player does not defeat enemies by killing them — they heal and purify them. Enemies are corrupted or enraged; the player reduces their corruption through gameplay. Combat resolution is healing, not damage.
 
 ## 2. Design pillars
 

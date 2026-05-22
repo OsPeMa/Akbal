@@ -4,6 +4,7 @@ using UnityEngine;
 public class RhythmMinigame : MonoBehaviour
 {
     public event Action<HitResult> HitFeedback;
+    public event Action Closed;
 
 
     [Header("Data")]
@@ -56,11 +57,14 @@ public class RhythmMinigame : MonoBehaviour
         CurrentAction = null;
         Session = null;
         if (hud != null) hud.gameObject.SetActive(false);
+        Closed?.Invoke();
     }
 
     void Update()
     {
-        if (IsOpen && Session != null) Session.Tick();
+        if (!IsOpen || Session == null) return;
+        Session.Tick();
+        if (Session.Finished) Close();
     }
 
     void OnRail(RhythmRail rail)
@@ -68,5 +72,6 @@ public class RhythmMinigame : MonoBehaviour
         if (!IsOpen || Session == null) return;
         var result = Session.Press(rail);
         HitFeedback?.Invoke(result);
+        CurrentAction?.OnHit(result);
     }
 }

@@ -3,6 +3,7 @@ using UnityEngine;
 [RequireComponent(typeof(PlayerInputReader))]
 [RequireComponent(typeof(PlayerMover))]
 [RequireComponent(typeof(PlayerDash))]
+[RequireComponent(typeof(PlayerParry))]
 [RequireComponent(typeof(Health))]
 public class PlayerController : MonoBehaviour
 {
@@ -16,16 +17,28 @@ public class PlayerController : MonoBehaviour
     PlayerInputReader input;
     PlayerMover mover;
     PlayerDash dash;
+    PlayerParry parry;
     Health health;
     Transform camTf;
+    Enemy ritualTarget;
 
     void Awake()
     {
         input = GetComponent<PlayerInputReader>();
         mover = GetComponent<PlayerMover>();
         dash = GetComponent<PlayerDash>();
+        parry = GetComponent<PlayerParry>();
         health = GetComponent<Health>();
         if (Camera.main != null) camTf = Camera.main.transform;
+    }
+
+    void Start()     { if (rhythm != null) rhythm.Closed += OnRitualClosed; }
+    void OnDestroy() { if (rhythm != null) rhythm.Closed -= OnRitualClosed; }
+
+    void OnRitualClosed()
+    {
+        if (ritualTarget != null) ritualTarget.RitualLocked = false;
+        ritualTarget = null;
     }
 
     void Update()
@@ -37,27 +50,25 @@ public class PlayerController : MonoBehaviour
         mover.DesiredVelocity = worldDir * mover.maxSpeed * scale;
 
         if (input.DashPressed && dash.IsReady) dash.TryStart(worldDir);
+        if (input.ParryPressed && parry.IsReady) parry.TryStart();
 
         UpdateRhythmIntent();
     }
 
     void UpdateRhythmIntent()
     {
-        if (rhythm == null) return;
+        if (rhythm == null || rhythm.IsOpen) return;
 
-        if (rhythm.IsOpen)
-        {
-            bool keepHolding = rhythm.CurrentAction is PurifyAction p
-                && input.PurifyHeld
-                && p.IsValid();
-            if (!keepHolding) rhythm.Close();
-            return;
-        }
-
-        if (input.PurifyHeld)
+        if (input.PurifyPressed)
         {
             var target = EnemyRegistry.FindNearestVulnerable(transform.position, purifyRange);
-            if (target != null) rhythm.Open(new PurifyAction(target, health));
+            if (target == null) return;
+            rhythm.Open(new PurifyAction(target, health));
+            if (rhythm.IsOpen)
+            {
+                ritualTarget = target;
+                target.RitualLocked = true;
+            }
         }
     }
 }

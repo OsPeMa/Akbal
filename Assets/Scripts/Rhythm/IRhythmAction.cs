@@ -1,6 +1,7 @@
 public interface IRhythmAction
 {
     bool IsValid();
+    void OnHit(HitResult result);
     void Apply(RhythmSession session);
 }
 
@@ -21,12 +22,15 @@ public class PurifyAction : IRhythmAction
 
     public bool IsValid() => Target != null && Target.IsVulnerable;
 
-    public void Apply(RhythmSession session)
+    public void OnHit(HitResult result)
     {
-        if (Target == null || session == null) return;
-        float purifyAmt = session.PerfectCount * PerfectPurify + session.GoodCount * GoodPurify;
-        float healAmt   = session.PerfectCount * PerfectHeal   + session.GoodCount * GoodHeal;
-        if (purifyAmt > 0f) Target.Purify(purifyAmt);
+        float purifyAmt = result == HitResult.Perfect ? PerfectPurify
+                        : result == HitResult.Good    ? GoodPurify : 0f;
+        float healAmt   = result == HitResult.Perfect ? PerfectHeal
+                        : result == HitResult.Good    ? GoodHeal   : 0f;
+        if (purifyAmt > 0f && Target != null) Target.Purify(purifyAmt);
         if (healAmt > 0f && PlayerHealth != null) PlayerHealth.Heal(healAmt);
     }
+
+    public void Apply(RhythmSession session) { }
 }
