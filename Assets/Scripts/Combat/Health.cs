@@ -15,6 +15,12 @@ public class Health : MonoBehaviour
 
     void Awake() { CurrentHealth = maxHealth; }
 
+    public void SetMax(float value)
+    {
+        maxHealth = Mathf.Max(0f, value);
+        CurrentHealth = maxHealth;
+    }
+
     public void TakeDamage(float amount)
     {
         if (!IsAlive) return;

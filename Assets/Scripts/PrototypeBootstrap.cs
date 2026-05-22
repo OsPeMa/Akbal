@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
@@ -5,12 +6,11 @@ using UnityEngine.UI;
 
 public class PrototypeBootstrap : MonoBehaviour
 {
-    [Tooltip("Optional. If null, a default in-memory pattern is created.")]
+    [Tooltip("Optional. If null, a default in-memory pattern is created (global fallback for RhythmMinigame).")]
     public RhythmPattern defaultPattern;
 
-    [Header("Enemies")]
-    public int enemyCount = 3;
-    public float enemySpawnRadius = 7f;
+    [Tooltip("Optional. If null, a default 3-enemy Drum encounter is generated in memory.")]
+    public Encounter defaultEncounter;
 
     void Awake()
     {
@@ -31,7 +31,7 @@ public class PrototypeBootstrap : MonoBehaviour
 
         BuildHealthBar(canvas, player.GetComponent<Health>());
 
-        SpawnEnemies(player.transform);
+        BuildEncounter(player.transform);
 
         hud.gameObject.SetActive(false);
     }
@@ -184,30 +184,32 @@ public class PrototypeBootstrap : MonoBehaviour
         hb.source = health;
     }
 
-    void SpawnEnemies(Transform playerTf)
+    void BuildEncounter(Transform playerTf)
     {
-        for (int i = 0; i < enemyCount; i++)
-        {
-            float a = (i / (float)enemyCount) * Mathf.PI * 2f;
-            var pos = new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a)) * enemySpawnRadius;
-            pos.y = 1f;
-            SpawnEnemy(pos, playerTf);
-        }
+        var encounter = defaultEncounter != null ? defaultEncounter : CreateDefaultEncounter();
+
+        var runnerGo = new GameObject("EncounterRunner");
+        var runner = runnerGo.AddComponent<EncounterRunner>();
+        runner.encounter = encounter;
+        runner.encounterOrigin = playerTf;
     }
 
-    GameObject SpawnEnemy(Vector3 pos, Transform target)
+    Encounter CreateDefaultEncounter()
     {
-        var go = GameObject.CreatePrimitive(PrimitiveType.Capsule);
-        go.name = "Enemy";
-        go.transform.position = pos;
-        var mr = go.GetComponent<MeshRenderer>();
-        mr.sharedMaterial = new Material(mr.sharedMaterial) { color = new Color(0.7f, 0.25f, 0.25f) };
-        go.AddComponent<Rigidbody>();
-        var health = go.AddComponent<Health>();
-        var e = go.AddComponent<Enemy>();
-        e.target = target;
-        var bar = go.AddComponent<EnemyCorruptionBar>();
-        bar.source = health;
-        return go;
+        var attackPattern = ScriptableObject.CreateInstance<EnemyAttackPattern>();
+
+        var archetype = ScriptableObject.CreateInstance<EnemyArchetype>();
+        archetype.archetypeName = "Drum";
+        archetype.attackPattern = attackPattern;
+        archetype.ritualPattern = defaultPattern;
+
+        var encounter = ScriptableObject.CreateInstance<Encounter>();
+        encounter.spawns = new List<EnemySpawn>
+        {
+            new EnemySpawn { archetype = archetype, positionOffset = new Vector2( 7.00f,  0.00f), beatOffset = 0f    },
+            new EnemySpawn { archetype = archetype, positionOffset = new Vector2(-3.50f,  6.06f), beatOffset = 2.67f },
+            new EnemySpawn { archetype = archetype, positionOffset = new Vector2(-3.50f, -6.06f), beatOffset = 5.33f },
+        };
+        return encounter;
     }
 }

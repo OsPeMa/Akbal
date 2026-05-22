@@ -37,7 +37,7 @@ public class PlayerController : MonoBehaviour
 
     void OnRitualClosed()
     {
-        if (ritualTarget != null) ritualTarget.RitualLocked = false;
+        if (ritualTarget != null) ritualTarget.NotifyRitualClosed();
         ritualTarget = null;
     }
 
@@ -63,11 +63,12 @@ public class PlayerController : MonoBehaviour
         {
             var target = EnemyRegistry.FindNearestVulnerable(transform.position, purifyRange);
             if (target == null) return;
-            rhythm.Open(new PurifyAction(target, health));
+            var ritualPattern = target.archetype != null ? target.archetype.ritualPattern : null;
+            rhythm.Open(new PurifyAction(target, health), ritualPattern);
             if (rhythm.IsOpen)
             {
                 ritualTarget = target;
-                target.RitualLocked = true;
+                target.NotifyRitualOpened();
             }
         }
     }

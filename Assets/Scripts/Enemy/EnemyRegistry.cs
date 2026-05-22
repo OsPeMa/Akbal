@@ -23,7 +23,7 @@ public static class EnemyRegistry
         for (int i = 0; i < all.Count; i++)
         {
             var e = all[i];
-            if (e == null || !e.IsVulnerable) continue;
+            if (e == null || !e.CanReceiveRitual) continue;
             float d = Vector3.Distance(origin, e.transform.position);
             if (d <= bestDist) { bestDist = d; best = e; }
         }

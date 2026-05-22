@@ -27,14 +27,16 @@ public class RhythmMinigame : MonoBehaviour
     void Start()     { if (input != null) input.RailPressed += OnRail; }
     void OnDestroy() { if (input != null) input.RailPressed -= OnRail; }
 
-    public void Open(IRhythmAction action)
+    public void Open(IRhythmAction action, RhythmPattern overridePattern = null)
     {
-        if (IsOpen || pattern == null) return;
+        if (IsOpen) return;
         var conductor = Conductor.I;
         if (conductor == null) return;
+        var usePattern = overridePattern != null ? overridePattern : pattern;
+        if (usePattern == null) return;
         IsOpen = true;
         CurrentAction = action;
-        Session = new RhythmSession(pattern, conductor)
+        Session = new RhythmSession(usePattern, conductor)
         {
             LookAhead = lookAhead,
             PerfectWindow = perfectWindow,
@@ -64,7 +66,8 @@ public class RhythmMinigame : MonoBehaviour
     {
         if (!IsOpen || Session == null) return;
         Session.Tick();
-        if (Session.Finished) Close();
+        if (Session.Finished) { Close(); return; }
+        if (CurrentAction != null && !CurrentAction.IsValid()) Close();
     }
 
     void OnRail(RhythmRail rail)
